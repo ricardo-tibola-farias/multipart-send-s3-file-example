@@ -67,7 +67,7 @@ public async Task UploadCompactedFiles(string[] filesKeys, string outputFileKey)
         //    CannedACL = S3CannedACL.PublicRead,
         //    TagSet = new List<Tag> { new Tag() { Key = "expireMonth", Value = "1" } }
         //};
-        //await FotoGoS3Client.PutObjectAsync(putObject);
+        //await _s3Client.PutObjectAsync(putObject);
     }
 }
 
@@ -98,14 +98,14 @@ private async Task<string> UploadChunk(string outputKey, string uploadId, int ch
                 TagSet = new List<Tag> { new Tag() { Key = "expireMonth", Value = "1" } }
             };
 
-            var initResponse = await FotoGoS3Client.InitiateMultipartUploadAsync(initiateRequest);
+            var initResponse = await _s3Client.InitiateMultipartUploadAsync(initiateRequest);
             uploadId = initResponse.UploadId;
         }
 
         //Step 2: upload each chunk (this is run for every chunk unlike the other steps which are run once)
         var uploadRequest = new UploadPartRequest
         {
-            BucketName = BucketNameFotogo,
+            BucketName = BucketName,
             Key = outputKey,
             UploadId = uploadId,
             PartNumber = partNumber,
@@ -114,7 +114,7 @@ private async Task<string> UploadChunk(string outputKey, string uploadId, int ch
             PartSize = partSize
         };
 
-        var uploadResponse = await FotoGoS3Client.UploadPartAsync(uploadRequest);
+        var uploadResponse = await _s3Client.UploadPartAsync(uploadRequest);
 
 
         //Step 3: build and send the multipart complete request
@@ -128,13 +128,13 @@ private async Task<string> UploadChunk(string outputKey, string uploadId, int ch
 
             var completeRequest = new CompleteMultipartUploadRequest
             {
-                BucketName = BucketNameFotogo,
+                BucketName = BucketName,
                 Key = outputKey,
                 UploadId = uploadId,
                 PartETags = eTags
             };
 
-            var result = await FotoGoS3Client.CompleteMultipartUploadAsync(completeRequest);
+            var result = await _s3Client.CompleteMultipartUploadAsync(completeRequest);
         }
         else
         {
